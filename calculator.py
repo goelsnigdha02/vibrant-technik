@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 import math
 
@@ -138,6 +139,8 @@ def carrier_calculation(
 
 
 if __name__ == '__main__':
+
+    st.title('Grille Calculator')
 
     inventory = pd.read_csv('inventory.csv')
     print(inventory)
