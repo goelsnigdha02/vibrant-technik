@@ -28,9 +28,8 @@ def run_fixed_fringe(data):
           ['Pitch (mm)', data['pitch']],
           ['Orientation', data['orientation']],
           ['Total Pieces (pcs)', data['num_pieces']],
-          ['Fringe End Caps (pcs)', data['num_pieces']*2],
+          ['{} Fringe End Caps (pcs)'.format(data['af_type']), data['num_pieces']*2],
           ['Black Gypsum Screws (pcs)', data['num_pieces']*4],
-          ['{} End Cap (pcs)'.format(data['af_type']), data['num_pieces']*2],
           ['Full Threaded Screws (pcs)', data['num_pieces']*4],
           ['PVC Gitty (pcs)', data['num_pieces']*4],
      ])
@@ -38,17 +37,30 @@ def run_fixed_fringe(data):
      st.dataframe(output_df)
 
 
+def run_fixed_c_channel(data):
+    if data['af_type'] == 'AF 60':
+        plate_width = st.selectbox('Select C-Plate Width (mm):', [50])
+    elif data['af_type'] == 'AF 100':
+        plate_width = st.selectbox('Select C-Plate Width (mm):', [50, 75])
+    else:
+        plate_width = st.selectbox('Select C-Plate Width (mm):', [75, 112])
+
+    plate_length = data['width'] * 2
+
+
 def run_fixed(data):
-     fixing_method = st.selectbox('Fixing Method:', [
-          'Fringe End Caps',
-          'C-Channel',
-          'MS Rod',
-          'D-Wall Bracket'
-     ])
+    fixing_method = st.selectbox('Fixing Method:', [
+        'Fringe End Caps',
+        'C-Channel',
+        'MS Rod/Slot Cut Pipe',
+        'D-Wall Bracket'
+    ])
 
-     if fixing_method == 'Fringe End Caps':
-          run_fixed_fringe(data)
-
+    if fixing_method == 'Fringe End Caps':
+        run_fixed_fringe(data)
+    elif fixing_method == 'C-Channel':
+        run_fixed_c_channel(data)
+    
 
 def run():
 
@@ -72,26 +84,15 @@ def run():
 
     if installation == 'Fixed':
          run_fixed(data)
-    
-
-# aerofoil fixing methods
-
-# width, height
-# pitch
-
-# fringe endcap fixing 
 
 
-# fixed
+# c-plate aerofoil
+# sizes of plate x10
+# number of pieces
+# length of plate = width*2
+# no of 19mm black gypsum screw pieces = num pieces * 4
+# full threaded screw = plate length /300
+# pvc gitty = full threaded
+         
 
-# # d-wall bracket also has endcaps
-# # c-channel
-# # endcap
-# # ms rod or pipe
-# # 
-
-# # manual movable - 
-# motorized
-
-
-
+# 
