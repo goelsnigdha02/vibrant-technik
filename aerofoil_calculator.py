@@ -1,98 +1,296 @@
+import math
 import streamlit as st
 import pandas as pd
-import math
+import optimizer
+
+AEROFOIL_WIDTH = {
+    'AF 60': 60,
+    'AF 100': 100,
+    'AF 150': 150,
+    'AF 200': 200,
+    'AF 250': 250,
+    'AF 300': 300,
+    'AF 400': 400,
+}
+L_ANGLE_LENGTH = 3650
+
+class AerofoilCalculator:
+    def __init__(self,
+                 orientation,
+                 width,
+                 height,
+                 pitch,
+                 allowed_wastage,
+                 window,
+                 af_type,
+                 installation,
+                 **kwargs):
+        self.orientation = orientation
+        self.width = width
+        self.height = height
+        self.pitch = pitch
+        self.allowed_wastage = allowed_wastage
+        self.window = window
+        self.af_type = af_type
+        self.installation = installation
+        self.inventory = pd.read_csv('inventory.csv')
+        self.divisions = optimizer.calculate_divisions(
+            self.width,
+            self.height,
+            self.pitch,
+            self.orientation
+        )
+        
+        if 'fixing_method' in kwargs:
+            self.fixing_method = kwargs['fixing_method']
 
 
-def get_window_info():
-    data = {}
-    data['orientation'] = st.radio('Select orientation:', ('Horizontal', 'Vertical'))
-    data['width'] = st.number_input('Width:', min_value=150, value=6000)
-    data['height'] = st.number_input('Height:', min_value=0, value=3250)
+    def run_fringe(self):
+        output_df = pd.DataFrame({
+            'Aerofoil Type': [self.af_type],
+            'Width (mm)': [self.width if self.orientation == 'Horizontal' else self.height],
+            'Height (mm)': [self.height if self.orientation == 'Horizontal' else self.width],
+            'Pitch (mm)': [self.pitch],
+            'Orientation': [self.orientation],
+            'Total Pieces (pcs)': [self.divisions],
+            '{} Fringe End Caps (pcs)'.format(self.af_type): [self.divisions*2],
+            '19mm Black Gypsum Screws (pcs)': [self.divisions*4],
+            'Full Threaded Screws (pcs)': [self.divisions*4],
+            'PVC Gitty (pcs)': [self.divisions*4],
+        })
 
-    if data['orientation'] == 'Vertical':
-            temp = data['width']
-            data['width'] = data['height']
-            data['height'] = temp
-
-    data['pitch'] = st.number_input('Pitch:', min_value=0, max_value=data['height'], value=50)
-    data['num_pieces'] = data['width']//data['pitch']
-
-    return data
-
-
-def run_fixed_fringe(data):
-     output_df = pd.DataFrame([
-          ['Aerofoil Type', data['af_type']],
-          ['Width (mm)', data['width'] if data['orientation'] == 'Horizontal' else data['height']],
-          ['Height (mm)', data['height'] if data['orientation'] == 'Horizontal' else data['width']],
-          ['Pitch (mm)', data['pitch']],
-          ['Orientation', data['orientation']],
-          ['Total Pieces (pcs)', data['num_pieces']],
-          ['{} Fringe End Caps (pcs)'.format(data['af_type']), data['num_pieces']*2],
-          ['Black Gypsum Screws (pcs)', data['num_pieces']*4],
-          ['Full Threaded Screws (pcs)', data['num_pieces']*4],
-          ['PVC Gitty (pcs)', data['num_pieces']*4],
-     ])
-
-     st.dataframe(output_df)
+        return output_df
 
 
-def run_fixed_c_channel(data):
-    if data['af_type'] == 'AF 60':
-        plate_width = st.selectbox('Select C-Plate Width (mm):', [50])
-    elif data['af_type'] == 'AF 100':
-        plate_width = st.selectbox('Select C-Plate Width (mm):', [50, 75])
-    else:
-        plate_width = st.selectbox('Select C-Plate Width (mm):', [75, 112])
+    def run_c_channel(self):
 
-    plate_length = data['width'] * 2
+        plate_key = f'option_{self.window}'
+        if self.af_type == 'AF 60':
+            plate_width = st.selectbox('Select C-Plate Width (mm):', [50], key=plate_key)
+        elif self.af_type == 'AF 100':
+            plate_width = st.selectbox('Select C-Plate Width (mm):', [50, 75], key=plate_key)
+        else:
+            plate_width = st.selectbox('Select C-Plate Width (mm):', [75, 112], key=plate_key)
+        plate_length = self.width * 2
+
+        output_df = pd.DataFrame({
+            'Aerofoil Type': [self.af_type],
+            'Width (mm)': [self.width if self.orientation == 'Horizontal' else self.height],
+            'Height (mm)': [self.height if self.orientation == 'Horizontal' else self.width],
+            'Pitch (mm)': [self.pitch],
+            'Orientation': [self.orientation],
+            'Total Pieces (pcs)': [self.divisions],
+            'Length of {}mm x 10mm C-Plate'.format(str(plate_width)): [plate_length],
+            '19mm Black Gypsum Screws (pcs)': [self.divisions*4],
+            'Full Threaded Screws (pcs)': [plate_length/300],
+            'PVC Gitty (pcs)': [plate_length/300],
+        })
+
+        return output_df
 
 
-def run_fixed(data):
-    fixing_method = st.selectbox('Fixing Method:', [
-        'Fringe End Caps',
-        'C-Channel',
-        'MS Rod/Slot Cut Pipe',
-        'D-Wall Bracket'
-    ])
+    def run_ms_rod(self):
+        top_key = f'top_{self.window}'
+        top_suspension = st.number_input('Top Air Suspension (mm):', min_value=0, value=100, key=top_key)
+        bottom_key = f'bottom_{self.window}'
+        bottom_suspension = st.number_input('Bottom Air Suspension (mm):', min_value=0, value=100, key=bottom_key)
+        piece_length = self.height - (top_suspension + bottom_suspension)
 
-    if fixing_method == 'Fringe End Caps':
-        run_fixed_fringe(data)
-    elif fixing_method == 'C-Channel':
-        run_fixed_c_channel(data)
+        output_df = pd.DataFrame({
+            'Aerofoil Type': [self.af_type],
+            'Width (mm)': [self.width if self.orientation == 'Horizontal' else self.height],
+            'Height (mm)': [self.height if self.orientation == 'Horizontal' else self.width],
+            'Piece Length (mm)': [piece_length],
+            'Pitch (mm)': [self.pitch],
+            'Orientation': [self.orientation],
+            'Total Pieces (pcs)': [self.divisions],
+            'Number of {} End Caps (with centre hole) (pcs)'.format
+            (self.af_type): [self.divisions*2],
+            'Total MS Rods (pcs)': [self.divisions*2],
+            '19mm Black Gypsum Screws (pcs)': [self.divisions*4]
+        })
+
+        return output_df
+
+
+    def run_d_wall(self):
+        divisions = optimizer.calculate_divisions(
+            self.width,
+            self.height,
+            self.pitch,
+            self.orientation
+        )
+        inventory = pd.read_csv('inventory.csv')
+        curr_inv = optimizer.filter_inv(
+            inventory,
+            'Grille'
+        )#, divisions)
+        cnts = optimizer.find_counts(curr_inv)
+        possible_lengths = optimizer.find_combinations(
+            self.width,
+            curr_inv['length'].unique().tolist(),
+            cnts,
+            divisions,
+            self.allowed_wastage
+        )
+
+        # wastages = [sum(opt)-width for opt in possible_lengths]
+
+        strs = [
+            'Option {num}: {option}'.format(num=opt+1, option=possible_lengths[opt])
+            for opt in range(len(possible_lengths))
+        ]
+
+        st.write('Number of total divisions: ', divisions)
+
+        for opt in range(len(possible_lengths)):
+
+            st.write(strs[opt])
+            st.write('Wastage: {}'.format(sum(possible_lengths[opt])-self.width))
+            st.write('total: {}\n'.format(sum(possible_lengths[opt])))
+
+        st.subheader('Choose desired Aerofoil breakdown:')
+        option_key = f'option_{self.window}'
+        selected_option = st.selectbox('Select an option', strs, key=option_key)
+        length_combination = possible_lengths[strs.index(selected_option)]
+
+        st.write('Number of pieces required for each length:')
+        total_grille_pieces = []
+        for l in set(length_combination):
+            length_cnt_per_division = length_combination.count(l)
+            grille_cnt_per_length = divisions*(length_cnt_per_division)
+            total_grille_pieces.append(grille_cnt_per_length)
+            st.write(
+                '{len} mm --> {length_cnt_per_division} piece(s) per division * {divisions} divisions = {number} pieces'.format(
+                    len = l,
+                    length_cnt_per_division = length_cnt_per_division,
+                    divisions = divisions,
+                    number = grille_cnt_per_length
+                )
+            )
+
+        total_grille_length = (self.width*divisions)/1000 # in metres
+
+        st.subheader('Carrier Calculations')
+        
+        carrier_lengths = 0
+        no_carriers_per_piece = []
+        
+        centre_gaps_per_piece, no_carriers_per_piece = optimizer.carrier_calculation(
+            length_combination,
+            carrier_lengths,
+            no_carriers_per_piece
+        )
+
+        carrier_distances_per_piece = optimizer.calculate_carrier_distances(
+            centre_gaps_per_piece, 
+            no_carriers_per_piece
+        )
+
+        st.write("Chosen length option: {}".format(length_combination))
+        st.write("Carrier divisions for each piece in the chosen option:")
+
+        lsts = []
+        for i in range(len(length_combination)):
+            lsts.append('{piece_length} mm: {breakdown}'.format(
+                piece_length = length_combination[i],
+                breakdown = carrier_distances_per_piece[i]
+            ))
+
+        for item in set(lsts):
+            st.write(item)
+
+        total_carrier_divisions = sum(no_carriers_per_piece)
+        total_carrier_length = total_carrier_divisions*self.height
+
+        st.write('Total carrier divisions = {}'.format(total_carrier_divisions))
+        st.write('Number of D Brackets required: {} aerofoil divisions * {} carrier divisions = {} brackets'.format(
+            divisions,
+            total_carrier_divisions,
+            divisions * total_carrier_divisions
+        ))
+        st.write('Total length of D-Bracket required: {} brackets * 55 mm per bracket = {} mm'.format(
+            divisions * total_carrier_divisions,
+            divisions * total_carrier_divisions * 55
+            ))
+        
+        results = pd.DataFrame({
+            'Width (mm)': [self.width if self.orientation == "Horizontal" else self.height],
+            'Height (mm)': [self.height if self.orientation == "Horizontal" else self.width],
+            'Orientation': [self.orientation],
+            'Pitch (mm)': [self.pitch],
+            'Area (ft2)': [((self.width * self.height) / (304.8 * 304.8))],
+            'Divisions': [self.divisions],
+            'Total Product Length (m)': [total_grille_length],
+            'Total Carrier Length (m)': [total_carrier_length / 1000],
+            'Total D-Brackets (pcs)': [divisions * total_carrier_divisions],
+            'Length of D-Bracket (mm)': [divisions * total_carrier_divisions * 55],
+            # 'Nuts/Bolts Weight (kg)': [nuts_bolts_cnt * 0.02],
+            # 'Nuts/Bolts/Washers (pcs)': [nuts_bolts_cnt],
+            'Self-drilling screws (pcs)': [total_carrier_length / 300],
+            # 'Joining Pieces (pcs)': [joining_pieces]
+        })
+
+        return results
     
 
-def run():
+    def run_manual_moveable(self):
 
-    installation = st.selectbox('Installation method:', [
-          'Fixed',
-          'Moveable (Manual)',
-          'Moveable (Motorized)'
-        ])
-    af_type = st.selectbox('Aerofoil type:', [
-          'AF 60',
-          'AF 100',
-          'AF 150',
-          'AF 200',
-          'AF 2500',
-          'AF 300',
-          'AF 400',
-    ])
+        total_carrier_length = (self.height * 2)
+        carrier_hole_distances = []
 
-    data = get_window_info()
-    data['af_type'] = af_type
+        for i in range(self.divisions):
+            if i == 0:
+                carrier_hole_distances.append(AEROFOIL_WIDTH[self.af_type] / 2)
+            else:
+                carrier_hole_distances.append(carrier_hole_distances[i-1] + self.pitch)
 
-    if installation == 'Fixed':
-         run_fixed(data)
+        l_angle_pcs = (self.height//L_ANGLE_LENGTH) + 1
+        length_per_l_angle = self.height / l_angle_pcs
 
+        results = pd.DataFrame({
+            'Width (mm)': [self.width if self.orientation == "Horizontal" else self.height],
+            'Height (mm)': [self.height if self.orientation == "Horizontal" else self.width],
+            'Orientation': [self.orientation],
+            'Pitch (mm)': [self.pitch],
+            'Total Aerofoil (pcs)': [self.divisions],
+            'Total Carrier Length (m)': [total_carrier_length/1000],
+            'Distance between holes in Carrier': [carrier_hole_distances],
+            'Top Endcap (pcs)': [self.divisions],
+            'Bottom Endcap (pcs)': [self.divisions],
+            'Pivot (pcs)': [self.divisions*2],
+            'Total Length of L-Angle (mm)': [self.height],
+            'Number of {} mm L-Angles (pcs)'.format(L_ANGLE_LENGTH): [l_angle_pcs],
+            'Length per L-Angle': [length_per_l_angle],
+            'Knobs (pcs)': [l_angle_pcs * 2],
+            'Black Gypsum Screws (pcs)': [self.divisions*4],
+            '3/4 Inch Self-Drilling Screws': [self.divisions*12],
+            '75mm Full Threaded Screws (pcs)': [total_carrier_length/300],
+            'PVC Gitty (pcs)': [total_carrier_length/300],
+            '6mm Interlocking Screws (pcs)': [self.divisions]
+        })
 
-# c-plate aerofoil
-# sizes of plate x10
-# number of pieces
-# length of plate = width*2
-# no of 19mm black gypsum screw pieces = num pieces * 4
-# full threaded screw = plate length /300
-# pvc gitty = full threaded
-         
+        return results
+    
 
-# 
+    def run_motorized_moveable(self):
+        
+        return
+    
+
+    def run_fixed(self):
+        if self.fixing_method == 'Fringe End Caps':
+            return self.run_fringe()
+        elif self.fixing_method == 'C-Channel':
+            return self.run_c_channel()
+        elif self.fixing_method == 'MS Rod/Slot Cut Pipe':
+            return self.run_ms_rod()
+        elif self.fixing_method == 'D-Wall Bracket':
+            return self.run_d_wall()
+        
+
+    def run(self):
+        if self.installation == 'Fixed':
+            return self.run_fixed()
+        elif self.installation == 'Moveable (Manual)':
+            return self.run_manual_moveable()

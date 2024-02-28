@@ -3,6 +3,7 @@ import pandas as pd
 import importlib
 
 from grille_calculator import GrilleCalculator
+from aerofoil_calculator import AerofoilCalculator
 
 st.title("Vibrant Technik Material Calculator")
 
@@ -30,13 +31,22 @@ GRILLE_COLUMNS = [
         'Bottom End Cap (pcs)',
         'Bottom End Cap Orientation'
     ]
+CALCULATOR_MAPPING = {
+        'Grille': GrilleCalculator,
+        'Aerofoil': AerofoilCalculator
+    }
 
-if PRODUCT == 'Grille':
+
+def get_num_windows():
     num_windows = st.number_input('Enter number of windows:', min_value=1, value=1, step=1)
+    return num_windows
+
+
+def run(product, num_windows, **kwargs):
     output = pd.DataFrame()
 
     for window in range(num_windows):
-        window_expander = st.expander(f'Window {window + 1} Calculation', expanded=False)
+        window_expander = st.expander(f'Window {window + 1}', expanded=False)
 
         with window_expander:
             orientation_key = f'orientation_{window}'
@@ -57,23 +67,73 @@ if PRODUCT == 'Grille':
             wastage_key = f'wastage_{window}'
             allowed_wastage = st.number_input(f'Buffer Wastage for Window {window + 1}:', min_value=0, value=100, key=wastage_key)
 
-            calculator = GrilleCalculator(
-                orientation,
-                width,
-                height,
-                pitch,
-                allowed_wastage,
-                window
-            )
+            calculator_class = CALCULATOR_MAPPING[product]
+            
+            if calculator_class == GrilleCalculator:
+                calculator = calculator_class(
+                    orientation,
+                    width,
+                    height,
+                    pitch,
+                    allowed_wastage,
+                    window
+                )
+            elif calculator_class == AerofoilCalculator:
+                calculator = calculator_class(
+                    orientation,
+                    width,
+                    height,
+                    pitch,
+                    allowed_wastage,
+                    window,
+                    kwargs['af_type'],
+                    kwargs['installation'],
+                    fixing_method=kwargs.get('fixing_method')
+                )
             df = calculator.run()
-            print(df)
             output = pd.concat([output, df], axis=0)
-            # print(len(output))
             st.subheader(f'Results for Window {window + 1}:')
-            st.dataframe(df)
+            st.write(df)
 
-    st.dataframe(output)
+    st.write(output)
 
+
+if PRODUCT == 'Grille':
+    num_windows = st.number_input('Number of areas:', min_value=1, value=1, step=1)
+    run(PRODUCT, num_windows)
 elif PRODUCT == 'Aerofoil':
-    import aerofoil_calculator as a
-    a.run()
+    af_type = st.selectbox('Aerofoil type:', [
+          'AF 60',
+          'AF 100',
+          'AF 150',
+          'AF 200',
+          'AF 250',
+          'AF 300',
+          'AF 400',
+    ])
+    installation = st.selectbox('Installation method:', [
+          'Fixed',
+          'Moveable (Manual)',
+          'Moveable (Motorized)'
+        ])
+    if installation == 'Fixed':
+        fixing_method = st.selectbox('Fixing Method:', [
+            'Fringe End Caps',
+            'C-Channel',
+            'MS Rod/Slot Cut Pipe',
+            'D-Wall Bracket'
+        ])
+        num_windows = get_num_windows()
+        run(PRODUCT,
+            num_windows,
+            af_type=af_type,
+            installation=installation,
+            fixing_method=fixing_method
+        )
+    else:
+        num_windows = get_num_windows()
+        run(PRODUCT,
+            num_windows,
+            af_type=af_type,
+            installation=installation
+        )
