@@ -16,10 +16,8 @@ class GrilleCalculator:
         self.window = window
         self.inventory = pd.read_csv('inventory.csv')
         self.divisions = optimizer.calculate_divisions(
-            self.width,
             self.height,
-            self.pitch,
-            self.orientation
+            self.pitch
         )
 
 
@@ -50,21 +48,35 @@ class GrilleCalculator:
             'Option {num}: {option}'.format(num=opt+1, option=possible_lengths[opt])
             for opt in range(len(possible_lengths))
         ]
+        wastages = [(sum(possible_lengths[opt])-self.width) for opt in range(len(possible_lengths))]
 
         st.write('Number of total divisions: ', self.divisions)
 
         for opt in range(len(possible_lengths)):
 
             st.write(strs[opt])
-            st.write('Wastage: {}'.format(sum(possible_lengths[opt])-self.width))
+            st.write('Wastage: {}'.format(wastages[opt]))
             st.write('total: {}\n'.format(sum(possible_lengths[opt])))
 
         st.subheader('Choose desired Grille breakdown:')
         option_key = f'option_{self.window}'
         selected_option = st.selectbox('Select an option', strs, key=option_key)
-        length_combination = possible_lengths[strs.index(selected_option)]
+        combination = possible_lengths[strs.index(selected_option)]
+        wastage = wastages[strs.index(selected_option)]
+        length_combination = []
 
-        st.write('Number of pieces required for each length:')
+        for i in range(len(combination)):
+            comb_key = f'comb_key_{i}{self.window}'
+            num = st.number_input('Usable length from the {}mm piece:'.format(combination[i]),
+                                  min_value=combination[i]-wastage,
+                                  max_value=combination[i],
+                                  key=comb_key)
+            length_combination.append(num)
+        
+        if sum(length_combination) != self.width:
+            st.error(f"Error: Lengths should total {self.width}")
+
+        st.subheader('Number of pieces required for each length:')
         total_grille_pieces = []
         for l in set(length_combination):
             length_cnt_per_division = length_combination.count(l)

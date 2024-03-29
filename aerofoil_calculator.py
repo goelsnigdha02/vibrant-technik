@@ -12,7 +12,7 @@ AEROFOIL_WIDTH = {
     'AF 300': 300,
     'AF 400': 400,
 }
-L_ANGLE_LENGTH = 3650
+L_ANGLE_LENGTH = 3250
 
 class AerofoilCalculator:
     def __init__(self,
@@ -35,10 +35,8 @@ class AerofoilCalculator:
         self.installation = installation
         self.inventory = pd.read_csv('inventory.csv')
         self.divisions = optimizer.calculate_divisions(
-            self.width,
             self.height,
-            self.pitch,
-            self.orientation
+            self.pitch
         )
         
         if 'fixing_method' in kwargs:
@@ -115,10 +113,8 @@ class AerofoilCalculator:
 
     def run_d_wall(self):
         divisions = optimizer.calculate_divisions(
-            self.width,
             self.height,
-            self.pitch,
-            self.orientation
+            self.pitch
         )
         inventory = pd.read_csv('inventory.csv')
         curr_inv = optimizer.filter_inv(
@@ -237,15 +233,8 @@ class AerofoilCalculator:
     def run_manual_moveable(self):
 
         total_carrier_length = (self.height * 2)
-        carrier_hole_distances = []
 
-        for i in range(self.divisions):
-            if i == 0:
-                carrier_hole_distances.append(AEROFOIL_WIDTH[self.af_type] / 2)
-            else:
-                carrier_hole_distances.append(carrier_hole_distances[i-1] + self.pitch)
-
-        l_angle_pcs = (self.height//L_ANGLE_LENGTH) + 1
+        l_angle_pcs = (self.height//L_ANGLE_LENGTH)
         length_per_l_angle = self.height / l_angle_pcs
 
         results = pd.DataFrame({
@@ -254,19 +243,27 @@ class AerofoilCalculator:
             'Orientation': [self.orientation],
             'Pitch (mm)': [self.pitch],
             'Total Aerofoil (pcs)': [self.divisions],
+            'Total Aerofoil Length (m)': [self.divisions * self.width],
             'Total Carrier Length (m)': [total_carrier_length/1000],
-            'Distance between holes in Carrier': [carrier_hole_distances],
+            'Carrier Hole Gap (pcs)': [self.pitch],
             'Top Endcap (pcs)': [self.divisions],
             'Bottom Endcap (pcs)': [self.divisions],
             'Pivot (pcs)': [self.divisions*2],
-            'Total Length of L-Angle (mm)': [self.height],
+            'Total Length of L-Angle (m)': [self.height/1000],
             'Number of {} mm L-Angles (pcs)'.format(L_ANGLE_LENGTH): [l_angle_pcs],
             'Length per L-Angle': [length_per_l_angle],
             'Knobs (pcs)': [l_angle_pcs * 2],
-            'Black Gypsum Screws (pcs)': [self.divisions*4],
-            '3/4 Inch Self-Drilling Screws': [self.divisions*12],
-            '75mm Full Threaded Screws (pcs)': [total_carrier_length/300],
-            'PVC Gitty (pcs)': [total_carrier_length/300],
+            'Black Gypsum Screws (pcs)': ['{} + {} buffer screws'.format(
+                self.divisions*4,
+                self.divisions)
+            ],
+            '3/4 Inch SS Screws': [self.divisions*1],
+            '75mm Full Threaded Screws (pcs)': ['{} + {} buffer pieces'.format(
+                round(total_carrier_length/300, 2),
+                1)],
+            'PVC Gitty (pcs)': ['{} + {} buffer pieces'.format(
+                round(total_carrier_length/300, 2),
+                1)],
             '6mm Interlocking Screws (pcs)': [self.divisions]
         })
 
@@ -274,7 +271,7 @@ class AerofoilCalculator:
     
 
     def run_motorized_moveable(self):
-        
+
         return
     
 
@@ -294,3 +291,5 @@ class AerofoilCalculator:
             return self.run_fixed()
         elif self.installation == 'Moveable (Manual)':
             return self.run_manual_moveable()
+        elif self.installation == 'Moveable (Motorized)':
+            return self.run_motorized_moveable()

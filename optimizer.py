@@ -4,16 +4,8 @@ CARRIER_MAX_GAP = 1000
 CARRIER_END_GAP = 150
 CARRIER_LENGTH = 3000
 
-def calculate_divisions(width, height, pitch, orientation):
-
-    divisions = math.ceil(height / pitch)
-
-    # if orientation == 'Vertical':
-    #     temp = width
-    #     width = height
-    #     height = temp
-
-    return divisions
+def calculate_divisions(width, pitch):
+    return math.ceil(width / pitch)
 
 
 def filter_inv(df, product):#, divisions):

@@ -60,7 +60,7 @@ def run(product, num_windows, **kwargs):
 
             if orientation == 'Vertical':
                 width, height = height, width
-
+            print(width, height)
             pitch_key = f'pitch_{window}'
             pitch = st.number_input(f'Pitch for Window {window + 1}:', min_value=0, max_value=height, value=50, key=pitch_key)
 
