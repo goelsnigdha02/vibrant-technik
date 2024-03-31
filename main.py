@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
-import importlib
 
 from grille_calculator import GrilleCalculator
 from aerofoil_calculator import AerofoilCalculator
+from cottal_calculator import CottalCalculator
+
+# header_image = "header.jpg"  # Path to your header image file
+# st.sidebar.image(header_image, width=st.sidebar.width, use_column_width=True)
 
 st.title("Vibrant Technik Material Calculator")
 
@@ -33,7 +36,8 @@ GRILLE_COLUMNS = [
     ]
 CALCULATOR_MAPPING = {
         'Grille': GrilleCalculator,
-        'Aerofoil': AerofoilCalculator
+        'Aerofoil': AerofoilCalculator,
+        'Cottal': CottalCalculator
     }
 
 
@@ -60,9 +64,10 @@ def run(product, num_windows, **kwargs):
 
             if orientation == 'Vertical':
                 width, height = height, width
-            print(width, height)
-            pitch_key = f'pitch_{window}'
-            pitch = st.number_input(f'Pitch for Window {window + 1}:', min_value=0, max_value=height, value=50, key=pitch_key)
+
+            if product != 'Cottal':
+                pitch_key = f'pitch_{window}'
+                pitch = st.number_input(f'Pitch for Window {window + 1}:', min_value=0, max_value=height, value=50, key=pitch_key)
 
             wastage_key = f'wastage_{window}'
             allowed_wastage = st.number_input(f'Buffer Wastage for Window {window + 1}:', min_value=0, value=100, key=wastage_key)
@@ -90,10 +95,19 @@ def run(product, num_windows, **kwargs):
                     kwargs['installation'],
                     fixing_method=kwargs.get('fixing_method')
                 )
+            elif calculator_class == CottalCalculator:
+                calculator = calculator_class(
+                    orientation,
+                    width,
+                    height,
+                    allowed_wastage,
+                    window,
+                    kwargs['pipe_grade']
+                )
             df = calculator.run()
             output = pd.concat([output, df], axis=0)
             st.subheader(f'Results for Window {window + 1}:')
-            st.write(df)
+            st.write(df.T)
 
     st.write(output)
 
@@ -137,3 +151,10 @@ elif PRODUCT == 'Aerofoil':
             af_type=af_type,
             installation=installation
         )
+elif PRODUCT == 'Cottal':
+    pipe_grade = st.selectbox('Pipe Grade:', [
+            '2550 Grade',
+            '2538 Grade'
+        ])
+    num_windows = st.number_input('Number of areas:', min_value=1, value=1, step=1)
+    run(PRODUCT, num_windows, pipe_grade=pipe_grade)

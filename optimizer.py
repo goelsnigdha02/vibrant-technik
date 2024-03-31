@@ -25,7 +25,6 @@ def find_counts(df):
 
 def find_combinations(target, lengths, counts, req_pieces, wastage):
     output = set()
-    
     def dfs(total, arr, i):
         if target <= total <= target + wastage:
             stock_avail = True
