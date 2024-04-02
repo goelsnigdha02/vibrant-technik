@@ -4,12 +4,13 @@ CARRIER_MAX_GAP = 1000
 CARRIER_END_GAP = 150
 CARRIER_LENGTH = 3000
 
+
 def calculate_divisions(width, pitch):
     return math.ceil(width / pitch)
 
 
-def filter_inv(df, product):#, divisions):
-    inv = df[(df['name'] == product)]# & (df['stock'] >= divisions)]
+def filter_inv(df, product):  # , divisions):
+    inv = df[(df['name'] == product)]  # & (df['stock'] >= divisions)]
     return inv
 
 
@@ -19,12 +20,13 @@ def find_counts(df):
         if int(row['length']) not in counts:
             counts[row['length']] = 0
         counts[row['length']] += row['stock']
-    
+
     return counts
 
 
 def find_combinations(target, lengths, counts, req_pieces, wastage):
     output = set()
+
     def dfs(total, arr, i):
         if target <= total <= target + wastage:
             stock_avail = True
@@ -36,15 +38,15 @@ def find_combinations(target, lengths, counts, req_pieces, wastage):
             if stock_avail:
                 output.add(tuple(sorted(arr)))
             return
-        
+
         if (total > target + wastage) or (i >= len(lengths)):
             return
-        
+
         arr.append(lengths[i])
         dfs(total + lengths[i], arr, i)
         arr.pop()
         dfs(total, arr, i + 1)
-    
+
     dfs(0, [], 0)
     return [list(x) for x in output]
 
@@ -54,10 +56,11 @@ def carrier_calculation(
     carrier_lengths,
     no_carriers_per_piece
 ):
+
     centre_gaps_per_piece = []
 
     for l in length_combination:
-        carrier_lengths = 1 # for end piece
+        carrier_lengths = 1  # for end piece
         centre_width = l - (2 * CARRIER_END_GAP)
         if centre_width >= 900:
             carrier_lengths += math.ceil(centre_width / CARRIER_MAX_GAP)
@@ -76,7 +79,7 @@ def calculate_carrier_distances(centre_gaps_per_piece,
                                 no_carriers_per_piece
                                 ):
     carrier_distances = []
-    
+
     for j in range(len(no_carriers_per_piece)):
         curr = 0
         curr_distances = []
