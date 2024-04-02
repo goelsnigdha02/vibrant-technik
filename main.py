@@ -5,9 +5,6 @@ from grille_calculator import GrilleCalculator
 from aerofoil_calculator import AerofoilCalculator
 from cottal_calculator import CottalCalculator
 
-# header_image = "header.jpg"  # Path to your header image file
-# st.sidebar.image(header_image, width=st.sidebar.width, use_column_width=True)
-
 st.title("Vibrant Technik Material Calculator")
 
 PRODUCT = st.selectbox('Select a product:', ['Grille', 'Aerofoil', 'S-Louver', 'C-Louver', 'Cottal'])

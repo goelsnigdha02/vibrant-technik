@@ -1,5 +1,3 @@
-import math
-import streamlit as st
 import pandas as pd
 import optimizer
 import general_calculator
@@ -7,7 +5,9 @@ import general_calculator
 CARRIER_LENGTH = 3000
 STANDARD_COTTAL_PITCH = 135
 
+
 class CottalCalculator:
+
     def __init__(self,
                  orientation,
                  width,
@@ -27,24 +27,33 @@ class CottalCalculator:
         self.allowed_wastage = allowed_wastage
         self.pipe_grade = pipe_grade
 
-
     def run(self):
-        total_product_length, total_carrier_length, total_carrier_divisions = general_calculator.run(
-            'Cottal',
+        vars = general_calculator.run(
+            'Grille',
             self.width,
             self.height,
-            self.pitch, 
+            self.pitch,
             self.divisions,
-            self.orientation, 
+            self.orientation,
             self.allowed_wastage,
             self.window
         )
 
+        total_product_length = vars['total_product_length']
+        total_carrier_length = vars['total_carrier_length']
+        total_carrier_divisions = vars['total_carrier_divisions']
+
         results = pd.DataFrame({
-            'Width (mm)': [self.width if self.orientation == "Horizontal" else self.height],
-            'Height (mm)': [self.height if self.orientation == "Horizontal" else self.width],
+            'Width (mm)': [
+                self.width if self.orientation == "Horizontal" else self.height
+            ],
+            'Height (mm)': [
+                self.height if self.orientation == "Horizontal" else self.width
+            ],
             'Orientation': [self.orientation],
-            'Area (ft2)': [round(((self.width * self.height) / (304.8 ** 2)), 2)],
+            'Area (ft2)': [
+                round(((self.width * self.height) / (304.8 ** 2)), 2)
+            ],
             'Product Divisions': [self.divisions],
             'Total Product Length (m)': [total_product_length],
             'Aluminum Pipe Grade': [self.pipe_grade],
@@ -56,9 +65,11 @@ class CottalCalculator:
                 self.width
             )],
             'EPDM Gasket': ['{}mm'.format(total_product_length+self.width)],
-            'Self-Drilling 3/4 Inch Screws (pcs)': [self.divisions * total_carrier_divisions],
+            'Self-Drilling 3/4 Inch Screws (pcs)': [
+                self.divisions * total_carrier_divisions
+            ],
             'Full Threaded 75mm Screws (pcs)': [total_carrier_length/500],
-            'PVC Gitty': [total_carrier_length/500] 
+            'PVC Gitty': [total_carrier_length/500]
         })
 
         return results
