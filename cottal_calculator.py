@@ -2,7 +2,6 @@ import pandas as pd
 import optimizer
 import general_calculator
 
-CARRIER_LENGTH = 3000
 STANDARD_COTTAL_PITCH = 135
 
 

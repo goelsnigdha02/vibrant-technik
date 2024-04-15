@@ -3,15 +3,21 @@ import streamlit as st
 import optimizer
 import sys
 
-STANDARD_PRODUCT_LENGTHS = [3050, 3250, 3750, 4000]
+STANDARD_PRODUCT_LENGTHS = [3050, 3650, 4550]
 CARRIER_TYPES = {
     'Grille': 'Carrier',
-    'Cottal': 'Aluminum Pipe'
-}
+    'Cottal': 'Aluminum Pipe',
+    'Fluted': '',
+    'S_Louver_1': 'Carrier',
+    'S_Louver_2': 'Carrier',
+    }
 CARRIER_LENGTHS = {
-    'Grille': 3000,
-    'Cottal': 3000
-}
+        'Grille': 3000,
+        'Aerofoil': 3000,
+        'Cottal': 3000,
+        'S_Louver_1': 133.7,
+        'S_Louver_2': 115.3
+    }
 
 
 def run(
@@ -23,7 +29,7 @@ def run(
         orientation,
         wastage,
         window,
-        ):
+    ):
 
     # inventory = pd.read_csv('inventory.csv')
     # curr_inv = optimizer.filter_inv(
@@ -64,7 +70,7 @@ def run(
         st.write('total: {}\n'.format(sum(possible_lengths[opt])))
 
     strs.append('Add Custom')
-    st.subheader('Choose desired {} breakdown:'.format(product))
+    st.subheader('Product Breakdown')
     option_key = f'option_{window}'
     selected_option = st.selectbox('Select an option', strs, key=option_key)
 
@@ -176,7 +182,7 @@ def run(
             CARRIER_LENGTHS[product],
             CARRIER_TYPES[product].lower()+'s'
         )
-    ] = total_carrier_length/CARRIER_LENGTHS[product]
+    ] = round(total_carrier_length/CARRIER_LENGTHS[product], 2)
 
     st.write(carrier_table.T.rename_axis('Item'))
 

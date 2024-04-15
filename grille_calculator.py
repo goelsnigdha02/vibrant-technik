@@ -3,8 +3,6 @@ import pandas as pd
 import optimizer
 import general_calculator
 
-CARRIER_LENGTH = 3000
-
 
 class GrilleCalculator:
     def __init__(
@@ -86,12 +84,12 @@ class GrilleCalculator:
             top = st.radio(
                 "Top end caps required?",
                 ("Yes", "No"),
-                key=self.window+3
+                key=top_key
             )
             top_orientation = st.radio(
                 "Top end cap orientation?",
                 caps,
-                key=top_key
+                key=self.window+3
             )
 
             st.write('Total {} top end caps required: {}'.format(

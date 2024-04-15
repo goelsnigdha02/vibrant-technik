@@ -2,7 +2,6 @@ import math
 
 CARRIER_MAX_GAP = 1000
 CARRIER_END_GAP = 150
-CARRIER_LENGTH = 3000
 
 
 def calculate_divisions(width, pitch):
