@@ -52,7 +52,6 @@ class FlutedCalculator:
             ],
             'Product Divisions': [self.divisions],
             'Total Product Length (m)': [total_product_length],
-            'Aluminum Pipe Grade': [self.pipe_grade],
             'Total Carrier Length (m)': [total_carrier_length / 1000],
             'Start Piece (29-3002-00)': ['{}mm: 1 piece'.format(
                 self.width

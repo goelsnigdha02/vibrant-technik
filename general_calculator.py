@@ -6,17 +6,23 @@ import sys
 STANDARD_PRODUCT_LENGTHS = [3050, 3650, 4550]
 CARRIER_TYPES = {
     'Grille': 'Carrier',
+    'Aerofoil': 'Carrier',
     'Cottal': 'Aluminum Pipe',
-    'Fluted': '',
+    'Fluted': 'Carrier',
     'S_Louver_1': 'Carrier',
     'S_Louver_2': 'Carrier',
+    'C-Louvers': 'Carrier',
+    'Rectangular Louvers': 'Carrier'
     }
 CARRIER_LENGTHS = {
         'Grille': 3000,
         'Aerofoil': 3000,
         'Cottal': 3000,
+        'Fluted': 3000,
         'S_Louver_1': 133.7,
-        'S_Louver_2': 115.3
+        'S_Louver_2': 115.3,
+        'C-Louvers': 3000,
+        'Rectangular Louvers': 3000
     }
 
 
@@ -184,7 +190,8 @@ def run(
         )
     ] = round(total_carrier_length/CARRIER_LENGTHS[product], 2)
 
-    st.write(carrier_table.T.rename_axis('Item'))
+    # st.write(carrier_table.T.rename_axis('Item'))
+    st.write(carrier_table)
 
     vars = {
         'length_combination': length_combination,

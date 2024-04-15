@@ -1,12 +1,12 @@
 import pandas as pd
 import optimizer
 import general_calculator
+import streamlit as st
 
 STANDARD_COTTAL_PITCH = 135
 
 
 class CottalCalculator:
-
     def __init__(self,
                  orientation,
                  width,
@@ -28,7 +28,7 @@ class CottalCalculator:
 
     def run(self):
         vars = general_calculator.run(
-            'Grille',
+            'Cottal',
             self.width,
             self.height,
             self.pitch,
@@ -70,5 +70,5 @@ class CottalCalculator:
             'Full Threaded 75mm Screws (pcs)': [total_carrier_length/500],
             'PVC Gitty': [total_carrier_length/500]
         })
-
+        print(results)
         return results

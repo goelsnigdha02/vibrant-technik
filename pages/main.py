@@ -5,8 +5,11 @@ from grille_calculator import GrilleCalculator
 from aerofoil_calculator import AerofoilCalculator
 from cottal_calculator import CottalCalculator
 from fluted_calculator import FlutedCalculator
-from louvers_calculator import SLouverCalculator
-from rectangular_calculator import RectangularCalculator
+from louvers_calculator import SLouverCalculator, CLouverCalculator, RectangularCalculator
+from menu import display_menu
+
+display_menu()
+
 
 st.title("Vibrant Technik Material Calculator")
 
@@ -16,16 +19,23 @@ PRODUCTS = [
     'Cottal',
     'Fluted',
     'S-Louvers',
-    'Rectangular Louver'
+    'C-Louvers',
+    'Rectangular Louvers'
     ]
 PRODUCT = st.selectbox('Select a product:', PRODUCTS)
 CALCULATOR_MAPPING = {
         'Grille': GrilleCalculator,
         'Aerofoil': AerofoilCalculator,
         'Cottal': CottalCalculator,
-        'S-Louver': SLouverCalculator,
-        'Rectangular Louver': RectangularCalculator
+        'Fluted': FlutedCalculator,
+        'S-Louvers': SLouverCalculator,
+        'C-Louvers': CLouverCalculator,
+        'Rectangular Louvers': RectangularCalculator
     }
+MIN_MAX_PITCH = {
+    'Rectangular Louvers': (50, 200),
+    'C-Louvers': (80, 100)
+}
 
 
 def get_num_windows():
@@ -70,16 +80,16 @@ def run(product, num_windows, **kwargs):
             if orientation == 'Vertical':
                 width, height = height, width
 
-            if product == 'Rectangular Louver':
+            if product in ['Rectangular Louvers', 'C-Louvers']:
                 pitch_key = f'pitch_{window}'
                 pitch = st.number_input(
                     f'Pitch for Window {window + 1}:',
-                    min_value=50,
-                    max_value=200,
-                    value=50,
+                    min_value=MIN_MAX_PITCH[product][0],
+                    max_value=MIN_MAX_PITCH[product][1],
+                    value=100,
                     key=pitch_key
                 )
-            elif product not in ['Cottal', 'S-Louver']:
+            elif product not in ['Cottal', 'S-Louvers']:
                 pitch_key = f'pitch_{window}'
                 pitch = st.number_input(
                     f'Pitch for Window {window + 1}:',
@@ -147,6 +157,15 @@ def run(product, num_windows, **kwargs):
                     window,
                     kwargs['louver_size']
                 )
+            elif calculator_class == CLouverCalculator:
+                calculator = calculator_class(
+                    orientation,
+                    width,
+                    height,
+                    pitch,
+                    allowed_wastage,
+                    window
+                )
             elif calculator_class == RectangularCalculator:
                 calculator = calculator_class(
                     orientation,
@@ -177,7 +196,6 @@ elif PRODUCT == 'Aerofoil':
           'AF 150',
           'AF 200',
           'AF 250',
-          'AF 300',
           'AF 400',
     ])
     installation = st.selectbox('Installation method:', [
@@ -216,15 +234,18 @@ elif PRODUCT == 'Cottal':
 elif PRODUCT == 'Fluted':
     num_windows = get_num_windows()
     run(PRODUCT, num_windows)
-elif PRODUCT == 'S-Louver':
-    louver_size = st.selectbox('S-Louver Size:', [
+elif PRODUCT == 'S-Louvers':
+    louver_size = st.selectbox('S-Louvers Size:', [
             '54.5x31.3',
             '84.2x31.3'
         ])
     num_windows = get_num_windows()
     run(PRODUCT, num_windows, louver_size=louver_size)
-elif PRODUCT == 'Rectangular Louver':
-    louver_size = st.selectbox('Rectangular Louver Size:', [
+elif PRODUCT == 'C-Louvers':
+    num_windows = get_num_windows()
+    run(PRODUCT, num_windows)
+elif PRODUCT == 'Rectangular Louvers':
+    louver_size = st.selectbox('Rectangular Louvers Size:', [
             '50x75',
             '50x100',
             '50x125'
