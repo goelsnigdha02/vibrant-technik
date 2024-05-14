@@ -1,31 +1,34 @@
 import pandas as pd
-import optimizer
-import general_calculator
+import modules.optimizer as optimizer
+import modules.general_calculator as general_calculator
+import streamlit as st
+
+STANDARD_COTTAL_PITCH = 135
 
 
-class FlutedCalculator:
-
+class CottalCalculator:
     def __init__(self,
                  orientation,
                  width,
                  height,
-                 pitch,
                  allowed_wastage,
-                 window):
+                 window,
+                 pipe_grade):
         self.orientation = orientation
         self.width = width
         self.height = height
-        self.pitch = pitch
+        self.pitch = STANDARD_COTTAL_PITCH
         self.divisions = optimizer.calculate_divisions(
             self.height,
             self.pitch
         )
         self.window = window
         self.allowed_wastage = allowed_wastage
+        self.pipe_grade = pipe_grade
 
     def run(self):
         vars = general_calculator.run(
-            'Fluted',
+            'Cottal',
             self.width,
             self.height,
             self.pitch,
@@ -52,6 +55,7 @@ class FlutedCalculator:
             ],
             'Product Divisions': [self.divisions],
             'Total Product Length (m)': [total_product_length],
+            'Aluminum Pipe Grade': [self.pipe_grade],
             'Total Carrier Length (m)': [total_carrier_length / 1000],
             'Start Piece (29-3002-00)': ['{}mm: 1 piece'.format(
                 self.width
@@ -66,5 +70,5 @@ class FlutedCalculator:
             'Full Threaded 75mm Screws (pcs)': [total_carrier_length/500],
             'PVC Gitty': [total_carrier_length/500]
         })
-
+        print(results)
         return results

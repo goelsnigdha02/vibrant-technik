@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-import optimizer
-import general_calculator
+import modules.optimizer as optimizer
+import modules.general_calculator as general_calculator
 
 
 class GrilleCalculator:
@@ -14,7 +14,7 @@ class GrilleCalculator:
         self.pitch = pitch
         self.allowed_wastage = allowed_wastage
         self.window = window
-        self.inventory = pd.read_csv('inventory.csv')
+        self.inventory = pd.read_csv('modules/inventory.csv')
         self.divisions = optimizer.calculate_divisions(
             self.height,
             self.pitch

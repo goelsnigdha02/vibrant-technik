@@ -1,15 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-from grille_calculator import GrilleCalculator
-from aerofoil_calculator import AerofoilCalculator
-from cottal_calculator import CottalCalculator
-from fluted_calculator import FlutedCalculator
-from louvers_calculator import SLouverCalculator, CLouverCalculator, RectangularCalculator
+from modules.grille_calculator import GrilleCalculator
+from modules.aerofoil_calculator import AerofoilCalculator
+from modules.cottal_calculator import CottalCalculator
+from modules.fluted_calculator import FlutedCalculator
+from modules.louvers_calculator import SLouverCalculator, CLouverCalculator, RectangularCalculator
 from menu import display_menu
 
 display_menu()
-
 
 st.title("Vibrant Technik Material Calculator")
 

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import optimizer
+import modules.optimizer as optimizer
 
 AEROFOIL_WIDTH = {
     'AF 60': 60,
@@ -34,7 +34,7 @@ class AerofoilCalculator:
         self.window = window
         self.af_type = af_type
         self.installation = installation
-        self.inventory = pd.read_csv('inventory.csv')
+        self.inventory = pd.read_csv('modules/inventory.csv')
         self.divisions = optimizer.calculate_divisions(
             self.height,
             self.pitch
@@ -151,7 +151,7 @@ class AerofoilCalculator:
             self.height,
             self.pitch
         )
-        inventory = pd.read_csv('inventory.csv')
+        inventory = pd.read_csv('modules/inventory.csv')
         curr_inv = optimizer.filter_inv(
             inventory,
             'Grille'

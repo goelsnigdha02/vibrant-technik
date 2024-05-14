@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-import optimizer
+import modules.optimizer as optimizer
 import sys
 
 STANDARD_PRODUCT_LENGTHS = [3050, 3650, 4550]
@@ -37,7 +37,7 @@ def run(
         window,
     ):
 
-    # inventory = pd.read_csv('inventory.csv')
+    # inventory = pd.read_csv('modules/inventory.csv')
     # curr_inv = optimizer.filter_inv(
     #     inventory,
     #     product

@@ -1,8 +1,8 @@
 import math
 import pandas as pd
-import optimizer
+import modules.optimizer as optimizer
 import streamlit as st
-import general_calculator
+import modules.general_calculator as general_calculator
 
 STANDARD_SLOUVER_PITCH = {
     '54.5x31.3': 43.7,

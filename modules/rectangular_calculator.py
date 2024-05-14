@@ -1,5 +1,5 @@
 import pandas as pd
-import optimizer
+import modules.optimizer as optimizer
 import streamlit as st
 
 
